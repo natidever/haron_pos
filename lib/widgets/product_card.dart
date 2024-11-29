@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import '../models/product_model.dart';
 import '../pages/products/product_detail.dart';
+import 'package:logger/logger.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
 
-  const ProductCard({
+  ProductCard({
     super.key,
     required this.product,
     required this.onIncrement,
     required this.onDecrement,
   });
+
+  var logger = Logger();
 
   @override
   Widget build(BuildContext context) {
@@ -43,9 +46,17 @@ class ProductCard extends StatelessWidget {
                         const BorderRadius.vertical(top: Radius.circular(12)),
                     child: SizedBox(
                       width: double.infinity,
-                      child: Image.asset(
-                        product.image,
+                      child: Image(
+                        image: AssetImage(product.image),
                         fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          logger.e('Error loading image: $error',
+                              error: error, stackTrace: stackTrace);
+                          return Image.asset(
+                            'assets/images/products/place_holder.jpg',
+                            fit: BoxFit.cover,
+                          );
+                        },
                       ),
                     ),
                   ),

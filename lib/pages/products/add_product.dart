@@ -1,8 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:haron_pos/bloc/prodct/products_bloc.dart';
+import 'package:haron_pos/models/product_model.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../widgets/custom_form_field.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:haron_pos/utils/logger.dart';
 
 class AddProductPage extends StatefulWidget {
   const AddProductPage({super.key});
@@ -191,120 +195,333 @@ class _AddProductPageState extends State<AddProductPage> {
     super.dispose();
   }
 
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black54,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.rectangle,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10.0,
+                  offset: const Offset(0.0, 10.0),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Success Icon with Animation
+                TweenAnimationBuilder(
+                  duration: const Duration(milliseconds: 600),
+                  tween: Tween<double>(begin: 0, end: 1),
+                  builder: (context, double value, child) {
+                    return Transform.scale(
+                      scale: value,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade50,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.check_circle,
+                          color: Colors.green.shade400,
+                          size: 72,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                // Success Message with Animation
+                FadeTransition(
+                  opacity: CurvedAnimation(
+                    parent: ModalRoute.of(context)!.animation!,
+                    curve: Curves.easeIn,
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Success!',
+                        style: GoogleFonts.poppins(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Product has been added successfully',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.pop(context); // Close dialog
+                          Navigator.pop(context); // Go back to products page
+                        },
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side:
+                              BorderSide(color: Theme.of(context).primaryColor),
+                        ),
+                        child: Text(
+                          'View Products',
+                          style: GoogleFonts.poppins(
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _resetForm();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Theme.of(context).primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Add Another',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _resetForm() {
+    setState(() {
+      _selectedImage = null;
+      _nameController.clear();
+      _descriptionController.clear();
+      _priceController.clear();
+      _categoryController.clear();
+      _skuController.clear();
+      _barcodeController.clear();
+      _stockController.clear();
+      _supplierController.clear();
+      _discountController.clear();
+      _taxController.clear();
+      _isBasicInfo = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: Text(
-          'Add New Product',
-          style: GoogleFonts.poppins(
-            color: Colors.black87,
-            fontWeight: FontWeight.w600,
+    return BlocListener<ProductsBloc, ProductsState>(
+      listener: (context, state) {
+        logger.i('State changed to: ${state.runtimeType}');
+        if (state is ProductAdded) {
+          logger.i('Product added successfully');
+          _showSuccessDialog();
+        } else if (state is ProductAddingError) {
+          logger.e('Error adding product: ${state.error}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Error: ${state.error}',
+                style: GoogleFonts.poppins(),
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: Colors.grey[100],
+        appBar: AppBar(
+          title: Text(
+            'Add New Product',
+            style: GoogleFonts.poppins(
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+            ),
           ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: const IconThemeData(color: Colors.black87),
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
-      ),
-      body: SingleChildScrollView(
-        controller: _scrollController,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildImageSection(),
-              const SizedBox(height: 24),
+        body: SingleChildScrollView(
+          controller: _scrollController,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildImageSection(),
+                const SizedBox(height: 24),
 
-              // Toggle Buttons for form sections
-              Row(
-                children: [
-                  Expanded(
-                    child: _SectionButton(
-                      title: 'Basic Info',
-                      isSelected: _isBasicInfo,
-                      onTap: () => setState(() => _isBasicInfo = true),
+                // Toggle Buttons for form sections
+                Row(
+                  children: [
+                    Expanded(
+                      child: _SectionButton(
+                        title: 'Basic Info',
+                        isSelected: _isBasicInfo,
+                        onTap: () => setState(() => _isBasicInfo = true),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _SectionButton(
-                      title: 'Inventory',
-                      isSelected: !_isBasicInfo,
-                      onTap: () => setState(() => _isBasicInfo = false),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _SectionButton(
+                        title: 'Inventory',
+                        isSelected: !_isBasicInfo,
+                        onTap: () => setState(() => _isBasicInfo = false),
+                      ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Form Sections
+                AnimatedCrossFade(
+                  duration: const Duration(milliseconds: 300),
+                  crossFadeState: _isBasicInfo
+                      ? CrossFadeState.showFirst
+                      : CrossFadeState.showSecond,
+                  firstChild: _BasicInfoForm(
+                    formKey: _basicInfoFormKey,
+                    nameController: _nameController,
+                    descriptionController: _descriptionController,
+                    priceController: _priceController,
+                    categoryController: _categoryController,
+                    discountController: _discountController,
+                    taxController: _taxController,
                   ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Form Sections
-              AnimatedCrossFade(
-                duration: const Duration(milliseconds: 300),
-                crossFadeState: _isBasicInfo
-                    ? CrossFadeState.showFirst
-                    : CrossFadeState.showSecond,
-                firstChild: _BasicInfoForm(
-                  formKey: _basicInfoFormKey,
-                  nameController: _nameController,
-                  descriptionController: _descriptionController,
-                  priceController: _priceController,
-                  categoryController: _categoryController,
-                  discountController: _discountController,
-                  taxController: _taxController,
+                  secondChild: _InventoryForm(
+                    formKey: _inventoryFormKey,
+                    skuController: _skuController,
+                    barcodeController: _barcodeController,
+                    stockController: _stockController,
+                    supplierController: _supplierController,
+                  ),
                 ),
-                secondChild: _InventoryForm(
-                  formKey: _inventoryFormKey,
-                  skuController: _skuController,
-                  barcodeController: _barcodeController,
-                  stockController: _stockController,
-                  supplierController: _supplierController,
-                ),
-              ),
 
-              const SizedBox(height: 32),
+                const SizedBox(height: 32),
 
-              // Submit Button
-              ElevatedButton(
-                onPressed: () {
-                  final isBasicInfoValid =
-                      _basicInfoFormKey.currentState?.validate() ?? false;
-                  final isInventoryValid =
-                      _inventoryFormKey.currentState?.validate() ?? false;
+                // Submit Button
+                ElevatedButton(
+                  onPressed: () {
+                    logger.i('Submit button pressed');
+                    final isBasicInfoValid =
+                        _basicInfoFormKey.currentState?.validate() ?? false;
+                    final isInventoryValid =
+                        _inventoryFormKey.currentState?.validate() ?? false;
 
-                  if (_isBasicInfo) {
-                    if (isBasicInfoValid) {
-                      // Handle basic info submission or switch to inventory
-                      setState(() => _isBasicInfo = false);
-                    }
-                  } else {
-                    if (isInventoryValid) {
-                      // Handle final form submission
-                      // Both forms are valid at this point
+                    if (_isBasicInfo) {
+                      if (isBasicInfoValid) {
+                        setState(() => _isBasicInfo = false);
+                        logger.i('Moving to inventory section');
+                      }
+                    } else {
                       if (isBasicInfoValid && isInventoryValid) {
-                        // Submit the complete form
+                        logger.i('Creating product object');
+                        final product = Product(
+                          name: _nameController.text,
+                          image: _selectedImage?.path ??
+                              'assets/images/products/place_holder.jpg',
+                          category: _categoryController.text,
+                          price: double.tryParse(_priceController.text) ?? 0,
+                          description: _descriptionController.text,
+                          quantityInStock:
+                              int.tryParse(_stockController.text) ?? 0,
+                          sku: _skuController.text,
+                          barcode: _barcodeController.text,
+                          supplier: _supplierController.text,
+                          discount:
+                              double.tryParse(_discountController.text) ?? 0,
+                          taxRate: double.tryParse(_taxController.text) ?? 0,
+                        );
+
+                        logger.i(
+                            'Creating product with image: ${_selectedImage?.path ?? "placeholder"}');
+                        context
+                            .read<ProductsBloc>()
+                            .add(AddProductEvent(product));
                       }
                     }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Theme.of(context).primaryColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Theme.of(context).primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: BlocBuilder<ProductsBloc, ProductsState>(
+                    builder: (context, state) {
+                      if (state is ProductAdding) {
+                        return const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        );
+                      }
+                      return Text(
+                        _isBasicInfo ? 'Next' : 'Create Product',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      );
+                    },
                   ),
                 ),
-                child: Text(
-                  _isBasicInfo ? 'Next' : 'Create Product',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
