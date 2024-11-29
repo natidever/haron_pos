@@ -175,10 +175,7 @@ class _ProductDetailState extends State<ProductDetail> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => CheckoutPage(
-                                product: widget.product,
-                                quantity: widget.product.quantity,
-                              ),
+                              builder: (context) => CheckoutPage(),
                             ),
                           );
                         },

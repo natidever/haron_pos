@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:haron_pos/pages/payments/checkout.dart';
 import '../models/product_model.dart';
 import '../pages/products/product_detail.dart';
 import 'package:logger/logger.dart';
+// import 'package:flutter_snackbar/flutter_snackbar.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -118,7 +121,10 @@ class ProductCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          onPressed: onDecrement,
+                          onPressed: () {
+                            onDecrement();
+                            _showSnackBar(context, false);
+                          },
                           icon:
                               const Icon(Icons.remove_circle_outline, size: 20),
                           color: Theme.of(context).primaryColor,
@@ -133,7 +139,10 @@ class ProductCard extends StatelessWidget {
                           ),
                         ),
                         IconButton(
-                          onPressed: onIncrement,
+                          onPressed: () {
+                            onIncrement();
+                            _showSnackBar(context, true);
+                          },
                           icon: const Icon(Icons.add_circle_outline, size: 20),
                           color: Theme.of(context).primaryColor,
                           padding: EdgeInsets.zero,
@@ -146,6 +155,50 @@ class ProductCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showSnackBar(BuildContext context, bool isAdded) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              isAdded ? Icons.add_shopping_cart : Icons.remove_shopping_cart,
+              color: Colors.white,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              isAdded
+                  ? '${product.name} added to cart'
+                  : '${product.name} removed from cart',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        backgroundColor: isAdded ? Colors.green.shade800 : Colors.red.shade800,
+        duration: const Duration(seconds: 2),
+        action: SnackBarAction(
+          label: 'VIEW CART',
+          textColor: Colors.white,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CheckoutPage(),
+              ),
+            );
+          },
         ),
       ),
     );
