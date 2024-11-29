@@ -4,6 +4,7 @@ import 'package:haron_pos/pages/products/add_product.dart';
 import '../../models/product_model.dart';
 import '../../widgets/custom_form_field.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:haron_pos/pages/payments/checkout.dart';
 
 class ProductDetail extends StatefulWidget {
   final Product product;
@@ -171,9 +172,15 @@ class _ProductDetailState extends State<ProductDetail> {
                       flex: 2,
                       child: ElevatedButton(
                         onPressed: () {
-                          if (_formKey.currentState?.validate() ?? false) {
-                            // Handle payment
-                          }
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CheckoutPage(
+                                product: widget.product,
+                                quantity: widget.product.quantity,
+                              ),
+                            ),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Theme.of(context).primaryColor,
@@ -184,7 +191,7 @@ class _ProductDetailState extends State<ProductDetail> {
                           elevation: 2,
                         ),
                         child: Text(
-                          'Pay',
+                          'Checkout',
                           style: GoogleFonts.poppins(
                             color: Colors.white,
                             fontSize: 16,

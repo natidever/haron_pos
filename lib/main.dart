@@ -5,6 +5,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:haron_pos/bloc/prodct/products_bloc.dart';
 import 'package:haron_pos/models/product_model.dart';
 import 'package:haron_pos/pages/products/products.dart';
+import 'package:haron_pos/pages/main_screen.dart';
+import 'package:haron_pos/navigation/bottom_nav_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +37,7 @@ class MyApp extends StatelessWidget {
           primaryColor: Colors.blue,
           textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
         ),
-        home: const ProductsPage(),
+        home: const BottomNavBar(),
       ),
     );
   }
