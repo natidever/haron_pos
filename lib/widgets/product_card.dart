@@ -72,14 +72,19 @@ class ProductCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.9),
+                        color: Colors.white.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.grey.shade300,
+                          width: 1,
+                        ),
                       ),
                       child: Text(
                         product.category,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
                           fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
@@ -121,10 +126,7 @@ class ProductCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          onPressed: () {
-                            onDecrement();
-                            _showSnackBar(context, false);
-                          },
+                          onPressed: product.quantity > 0 ? onDecrement : null,
                           icon:
                               const Icon(Icons.remove_circle_outline, size: 20),
                           color: Theme.of(context).primaryColor,
@@ -139,10 +141,7 @@ class ProductCard extends StatelessWidget {
                           ),
                         ),
                         IconButton(
-                          onPressed: () {
-                            onIncrement();
-                            _showSnackBar(context, true);
-                          },
+                          onPressed: onIncrement,
                           icon: const Icon(Icons.add_circle_outline, size: 20),
                           color: Theme.of(context).primaryColor,
                           padding: EdgeInsets.zero,
@@ -155,50 +154,6 @@ class ProductCard extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _showSnackBar(BuildContext context, bool isAdded) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              isAdded ? Icons.add_shopping_cart : Icons.remove_shopping_cart,
-              color: Colors.white,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              isAdded
-                  ? '${product.name} added to cart'
-                  : '${product.name} removed from cart',
-              style: GoogleFonts.poppins(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        backgroundColor: isAdded ? Colors.green.shade800 : Colors.red.shade800,
-        duration: const Duration(seconds: 2),
-        action: SnackBarAction(
-          label: 'VIEW CART',
-          textColor: Colors.white,
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const CheckoutPage(),
-              ),
-            );
-          },
         ),
       ),
     );

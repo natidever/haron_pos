@@ -6,6 +6,7 @@ import 'package:haron_pos/utils/logger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:haron_pos/widgets/cart_summary.dart';
+import 'package:haron_pos/pages/payments/chapa.dart';
 
 class CheckoutPage extends StatefulWidget {
   const CheckoutPage({super.key});
@@ -26,7 +27,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return BlocBuilder<CartBloc, CartState>(
       builder: (context, state) {
         if (state.items.isEmpty) {
-          return const Center(child: Text('Your cart is empty'));
+          return Scaffold(
+              body: const Center(child: Text('Your cart is empty')));
         }
 
         return Scaffold(
@@ -117,9 +119,45 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 onPressed: state.selectedPaymentMethod.isEmpty
                     ? null
                     : () {
-                        // Handle payment processing
-                        logger.i(
-                            'Processing payment with method: ${state.selectedPaymentMethod}');
+                        logger.i('Initiating payment process');
+                        ChapaService.initializePayment(
+                          context: context,
+                          items: state.items,
+                          total: state.total,
+                          paymentMethod: state.selectedPaymentMethod,
+                          onSuccess: () {
+                            logger.i('Payment completed successfully');
+                            // Clear cart and show success message
+                            context.read<CartBloc>().add(ClearCartEvent());
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Payment successful!',
+                                  style: GoogleFonts.poppins(),
+                                ),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+
+                            // Navigate back to products page
+                            Navigator.of(context).popUntil(
+                              (route) => route.isFirst,
+                            );
+                          },
+                          onError: (error) {
+                            logger.e('Payment failed: $error');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Payment failed: $error',
+                                  style: GoogleFonts.poppins(),
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          },
+                        );
                       },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Theme.of(context).primaryColor,

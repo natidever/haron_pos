@@ -8,9 +8,13 @@ import 'package:haron_pos/models/product_model.dart';
 import 'package:haron_pos/pages/products/products.dart';
 import 'package:haron_pos/pages/main_screen.dart';
 import 'package:haron_pos/navigation/bottom_nav_bar.dart';
+import 'package:chapa_unofficial/chapa_unofficial.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Chapa
+  Chapa.configure(privateKey: "CHASECK_TEST-HlZh7Xo8vNvT2jm6j08OzcnFnB63Yauf");
 
   // Initialize Hive
   await Hive.initFlutter();

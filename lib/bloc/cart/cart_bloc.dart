@@ -31,6 +31,8 @@ class SelectPaymentMethodEvent extends CartEvent {
   SelectPaymentMethodEvent(this.method);
 }
 
+class ClearCartEvent extends CartEvent {}
+
 // States
 abstract class CartState {
   final List<CartItem> items;
@@ -66,13 +68,18 @@ class CartBloc extends Bloc<CartEvent, CartState> {
   CartBloc() : super(CartInitial()) {
     on<AddToCartEvent>((event, emit) {
       try {
+        logger.i('Adding product to cart: ${event.product.name}');
         final currentItems = List<CartItem>.from(state.items);
+        logger.d('Current items in cart: ${currentItems.length}');
+
         final existingItemIndex = currentItems
             .indexWhere((item) => item.product.id == event.product.id);
 
         if (existingItemIndex != -1) {
+          logger.d('Updating existing item quantity');
           currentItems[existingItemIndex].quantity += event.quantity;
         } else {
+          logger.d('Adding new item to cart');
           currentItems.add(CartItem(
             product: event.product,
             quantity: event.quantity,
@@ -80,7 +87,8 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         }
 
         final total = _calculateTotal(currentItems);
-        logger.i('Product added to cart: ${event.product.name}');
+        logger.i('Cart updated - Items: ${currentItems.length}, Total: $total');
+
         emit(CartUpdated(
           items: currentItems,
           total: total,
@@ -141,6 +149,15 @@ class CartBloc extends Bloc<CartEvent, CartState> {
         selectedPaymentMethod: event.method,
       ));
       logger.i('Payment method selected: ${event.method}');
+    });
+
+    on<ClearCartEvent>((event, emit) {
+      logger.i('Clearing cart');
+      emit(CartUpdated(
+        items: [],
+        total: 0,
+        selectedPaymentMethod: '',
+      ));
     });
   }
 
