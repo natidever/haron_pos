@@ -51,40 +51,23 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ),
       );
 
-      // Add timeout
-      Timer(const Duration(seconds: 3), () {
-        if (mounted && isProcessing) {
-          setState(() {
-            hasTimedOut = true;
-            isProcessing = false;
-          });
-
-          Navigator.of(context, rootNavigator: true).pop();
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Something went wrong. Please try again.',
-                style: GoogleFonts.poppins(),
-              ),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      });
-
+      // Remove the timeout since Chapa handles its own loading
       await ChapaService.initializePayment(
         context: context,
         items: state.items,
         total: state.total,
         paymentMethod: state.selectedPaymentMethod,
         onSuccess: () {
-          if (!hasTimedOut && mounted) {
+          if (mounted) {
             setState(() {
               isProcessing = false;
             });
 
-            Navigator.of(context, rootNavigator: true).pop();
+            // Dismiss loading dialog only if it's showing
+            if (Navigator.canPop(context)) {
+              Navigator.of(context, rootNavigator: true).pop();
+            }
+
             context.read<CartBloc>().add(ClearCartEvent());
 
             ScaffoldMessenger.of(context).showSnackBar(
@@ -102,12 +85,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
         },
         onError: (error) {
           logger.e('Payment failed: $error');
-          if (!hasTimedOut && mounted) {
+          if (mounted) {
             setState(() {
               isProcessing = false;
             });
 
-            Navigator.of(context, rootNavigator: true).pop();
+            // Dismiss loading dialog only if it's showing
+            if (Navigator.canPop(context)) {
+              Navigator.of(context, rootNavigator: true).pop();
+            }
 
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -123,12 +109,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
       );
     } catch (e, stack) {
       logger.e('Error processing payment', error: e, stackTrace: stack);
-      if (!hasTimedOut && mounted) {
+      if (mounted) {
         setState(() {
           isProcessing = false;
         });
 
-        Navigator.of(context, rootNavigator: true).pop();
+        // Dismiss loading dialog only if it's showing
+        if (Navigator.canPop(context)) {
+          Navigator.of(context, rootNavigator: true).pop();
+        }
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
