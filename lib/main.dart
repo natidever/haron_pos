@@ -13,9 +13,9 @@ import 'package:chapa_unofficial/chapa_unofficial.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Chapa
-  Chapa.configure(privateKey: "CHASECK_TEST-HlZh7Xo8vNvT2jm6j08OzcnFnB63Yauf");
+  // Initialize Chapa with proper configuration
 
+  Chapa.configure(privateKey: "CHASECK_TEST-NMHnfnAw81g9EWXYoSm6FrobP7rePyRd");
   // Initialize Hive
   await Hive.initFlutter();
 

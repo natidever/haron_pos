@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:haron_pos/bloc/cart/cart_bloc.dart';
 import 'package:haron_pos/models/product_model.dart';
 import 'package:haron_pos/utils/logger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter/services.dart';
 
 import 'package:haron_pos/widgets/cart_summary.dart';
 import 'package:haron_pos/pages/payments/chapa.dart';
@@ -16,11 +19,153 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
+  bool hasTimedOut = false;
+  bool isProcessing = false;
+
   final paymentMethods = [
     ('Credit Card', 'Pay with credit or debit card', Icons.credit_card),
     ('Cash', 'Pay with cash on delivery', Icons.money),
     ('Bank Transfer', 'Pay via bank transfer', Icons.account_balance),
   ];
+
+  Future<void> _processPayment(CartState state) async {
+    if (isProcessing) return;
+
+    try {
+      setState(() {
+        isProcessing = true;
+        hasTimedOut = false;
+      });
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext dialogContext) => WillPopScope(
+          onWillPop: () async => false,
+          child: Center(
+            child: CircularProgressIndicator(
+              color: Theme.of(context).primaryColor,
+            ),
+          ),
+        ),
+      );
+
+      // Add timeout
+      Timer(const Duration(seconds: 3), () {
+        if (mounted && isProcessing) {
+          setState(() {
+            hasTimedOut = true;
+            isProcessing = false;
+          });
+
+          Navigator.of(context, rootNavigator: true).pop();
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Something went wrong. Please try again.',
+                style: GoogleFonts.poppins(),
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+
+      await ChapaService.initializePayment(
+        context: context,
+        items: state.items,
+        total: state.total,
+        paymentMethod: state.selectedPaymentMethod,
+        onSuccess: () {
+          if (!hasTimedOut && mounted) {
+            setState(() {
+              isProcessing = false;
+            });
+
+            Navigator.of(context, rootNavigator: true).pop();
+            context.read<CartBloc>().add(ClearCartEvent());
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Payment successful!',
+                  style: GoogleFonts.poppins(),
+                ),
+                backgroundColor: Colors.green,
+              ),
+            );
+
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+        },
+        onError: (error) {
+          logger.e('Payment failed: $error');
+          if (!hasTimedOut && mounted) {
+            setState(() {
+              isProcessing = false;
+            });
+
+            Navigator.of(context, rootNavigator: true).pop();
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Something went wrong. Please try again.',
+                  style: GoogleFonts.poppins(),
+                ),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+      );
+    } catch (e, stack) {
+      logger.e('Error processing payment', error: e, stackTrace: stack);
+      if (!hasTimedOut && mounted) {
+        setState(() {
+          isProcessing = false;
+        });
+
+        Navigator.of(context, rootNavigator: true).pop();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Something went wrong. Please try again.',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Widget _buildPaymentButton(CartState state) {
+    return ElevatedButton(
+      onPressed: state.selectedPaymentMethod.isEmpty
+          ? null
+          : () => _processPayment(state),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Theme.of(context).primaryColor,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        elevation: 0,
+      ),
+      child: Text(
+        'Pay \$${state.total.toStringAsFixed(2)}',
+        style: GoogleFonts.poppins(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,67 +260,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               ],
             ),
             child: SafeArea(
-              child: ElevatedButton(
-                onPressed: state.selectedPaymentMethod.isEmpty
-                    ? null
-                    : () {
-                        logger.i('Initiating payment process');
-                        ChapaService.initializePayment(
-                          context: context,
-                          items: state.items,
-                          total: state.total,
-                          paymentMethod: state.selectedPaymentMethod,
-                          onSuccess: () {
-                            logger.i('Payment completed successfully');
-                            // Clear cart and show success message
-                            context.read<CartBloc>().add(ClearCartEvent());
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Payment successful!',
-                                  style: GoogleFonts.poppins(),
-                                ),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-
-                            // Navigate back to products page
-                            Navigator.of(context).popUntil(
-                              (route) => route.isFirst,
-                            );
-                          },
-                          onError: (error) {
-                            logger.e('Payment failed: $error');
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Payment failed: $error',
-                                  style: GoogleFonts.poppins(),
-                                ),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          },
-                        );
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).primaryColor,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  'Pay \$${state.total.toStringAsFixed(2)}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              child: _buildPaymentButton(state),
             ),
           ),
         );

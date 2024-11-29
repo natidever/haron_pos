@@ -50,7 +50,6 @@ class ProductsBloc extends Bloc<ProductsEvent, ProductsState> {
           discount: event.product.discount,
           taxRate: event.product.taxRate,
         );
-
         logger.i('Saving product to Hive: ${productWithId.name}');
         await box.put(id, productWithId);
 

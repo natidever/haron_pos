@@ -10,7 +10,7 @@ packages:
     source: hosted
     version: "61.0.0"
   analyzer:
-    dependency: "direct dev"
+    dependency: transitive
     description:
       name: analyzer
       sha256: ea3d8652bda62982addfd92fdc2d0214e5f82e43325104990d4f4c4a2a313562
@@ -303,7 +303,7 @@ packages:
     source: hosted
     version: "8.1.6"
   flutter_inappwebview:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: flutter_inappwebview
       sha256: "3e9a443a18ecef966fb930c3a76ca5ab6a7aafc0c7b5e14a4a850cf107b09959"

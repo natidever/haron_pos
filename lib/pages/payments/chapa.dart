@@ -1,12 +1,12 @@
+import 'dart:async';
+import 'dart:io';
+import 'package:flutter/services.dart';
 import 'package:chapa_unofficial/chapa_unofficial.dart';
 import 'package:flutter/material.dart';
-import 'package:haron_pos/models/cart_item.dart';
-import 'package:haron_pos/utils/logger.dart';
+import '../../models/cart_item.dart';
+import '../../utils/logger.dart';
 
 class ChapaService {
-  static const String _testKey =
-      "CHASECK_TEST-HlZh7Xo8vNvT2jm6j08OzcnFnB63Yauf";
-
   static Future<void> initializePayment({
     required BuildContext context,
     required List<CartItem> items,
@@ -16,44 +16,45 @@ class ChapaService {
     required Function(String) onError,
   }) async {
     try {
-      logger.i('Initializing Chapa payment');
+      logger.i('Starting Chapa payment process');
 
-      // Generate a unique transaction reference
-      final txRef = DateTime.now().millisecondsSinceEpoch.toString();
+      try {
+        String? paymentUrl = await Chapa.getInstance.startPayment(
+          enableInAppPayment: true,
+          amount: total.toString(),
+          currency: 'ETB',
+          context: context,
+        );
 
-      // Create order description from cart items
-      final description = items
-          .map((item) => "${item.product.name} x${item.quantity}")
-          .join(", ");
-
-      logger.d('Transaction Reference: $txRef');
-      logger.d('Order Description: $description');
-
-      final paymentUrl = await Chapa.getInstance.startPayment(
-        context: context,
-        onInAppPaymentSuccess: (successMsg) {
-          logger.i('Payment successful: $successMsg');
-          onSuccess();
-        },
-        onInAppPaymentError: (errorMsg) {
-          logger.e('Payment error: $errorMsg');
-          onError(errorMsg);
-        },
-        amount: total.toString(),
-        currency: 'ETB',
-        txRef: txRef,
-        description: description,
-        title: 'Order Payment',
-      );
-
-      if (paymentUrl == null) {
-        throw Exception('Failed to initialize payment');
+        logger.i('Payment URL generated: $paymentUrl');
+      } on ChapaException catch (e) {
+        logger.e('Chapa Error: ${e.toString()}');
+        if (e is AuthException) {
+          onError('Authentication failed');
+        } else if (e is NetworkException) {
+          onError('Network error. Please check your connection');
+        } else if (e is ServerException) {
+          onError('Server error. Please try again');
+        } else {
+          onError('Payment failed. Please try again');
+        }
       }
+    } catch (e, stack) {
+      logger.e('General Error', error: e, stackTrace: stack);
+      onError('Payment initialization failed');
+    }
+  }
 
-      logger.i('Payment URL generated: $paymentUrl');
-    } catch (e, stackTrace) {
-      logger.e('Error initializing payment', error: e, stackTrace: stackTrace);
-      onError(e.toString());
+  // Add verification method
+  static Future<bool> verifyPayment(String txRef) async {
+    try {
+      logger.i('Verifying payment: $txRef');
+      final result = await Chapa.getInstance.verifyPayment(txRef: txRef);
+      logger.d('Verification result: $result');
+      return result['status'] == 'success';
+    } catch (e, stack) {
+      logger.e('Verification Error', error: e, stackTrace: stack);
+      return false;
     }
   }
 }
