@@ -5,6 +5,10 @@ import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:haron_pos/reports/models/daily_report_model.dart';
+import 'package:haron_pos/reports/services/pdf_service.dart';
+import 'package:haron_pos/reports/widgets/report_dialog.dart';
+import 'package:logger/logger.dart';
 
 class Transaction extends StatefulWidget {
   const Transaction({super.key});
@@ -14,6 +18,7 @@ class Transaction extends StatefulWidget {
 }
 
 class _TransactionState extends State<Transaction> {
+  var logger = Logger();
   late TransactionDataSource _transactionDataSource;
   String _searchQuery = '';
   String _selectedFilter = 'All';
@@ -38,6 +43,13 @@ class _TransactionState extends State<Transaction> {
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () => _generateReport(context),
+            icon: const Icon(Icons.summarize),
+            tooltip: 'Generate Report',
+          ),
+        ],
       ),
       body: BlocBuilder<TransactionBloc, TransactionBlocState>(
         builder: (context, state) {
@@ -340,6 +352,50 @@ class _TransactionState extends State<Transaction> {
         },
       ),
     );
+  }
+
+  Future<void> _generateReport(BuildContext context) async {
+    try {
+      final report = DailyReport.fromTransactions(
+        (context.read<TransactionBloc>().state as TransactionLoaded)
+            .transactions,
+      );
+
+      final pdfFile = await PdfService.generateDailyReport(report);
+
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => ReportDialog(
+            onDownload: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Report saved to ${pdfFile.path}',
+                    style: GoogleFonts.poppins(),
+                  ),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+          ),
+        );
+      }
+    } catch (e, stack) {
+      logger.e('Error generating report', error: e, stackTrace: stack);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error generating report',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
 
