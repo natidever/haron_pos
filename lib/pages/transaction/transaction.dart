@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:haron_pos/bloc/transactions/bloc/transaction_bloc_bloc.dart';
 import 'package:syncfusion_flutter_datagrid/datagrid.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class Transaction extends StatefulWidget {
   const Transaction({super.key});
@@ -13,14 +15,13 @@ class Transaction extends StatefulWidget {
 
 class _TransactionState extends State<Transaction> {
   late TransactionDataSource _transactionDataSource;
-  final DateFormat _dateFormatter = DateFormat('MMM dd, yyyy hh:mm a');
   String _searchQuery = '';
   String _selectedFilter = 'All';
 
   @override
   void initState() {
     super.initState();
-    _transactionDataSource = TransactionDataSource(transactions: transactions);
+    context.read<TransactionBloc>().add(LoadTransactionsEvent());
   }
 
   @override
@@ -38,20 +39,165 @@ class _TransactionState extends State<Transaction> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          // Search and Filter Section
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+      body: BlocBuilder<TransactionBloc, TransactionBlocState>(
+        builder: (context, state) {
+          if (state is TransactionLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (state is TransactionError) {
+            return Center(
+              child: Text(
+                state.message,
+                style: GoogleFonts.poppins(color: Colors.red),
+              ),
+            );
+          }
+
+          if (state is TransactionLoaded) {
+            if (state.transactions.isEmpty) {
+              return Center(
+                child: Container(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(32),
+                        decoration: BoxDecoration(
+                          color:
+                              Theme.of(context).primaryColor.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.receipt_long_outlined,
+                          size: 88,
+                          color:
+                              Theme.of(context).primaryColor.withOpacity(0.7),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      Text(
+                        'No Transactions Yet',
+                        style: GoogleFonts.poppins(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: Text(
+                          'Complete your first sale to see transaction history',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            color: Colors.grey[600],
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            _transactionDataSource = TransactionDataSource(
+              transactions: state.transactions
+                  .map((transaction) => TransactionData(
+                        date: transaction.date,
+                        transactionId: transaction.transactionId,
+                        amount: transaction.amount,
+                        status: transaction.status,
+                      ))
+                  .toList(),
+            );
+
+            return Column(
               children: [
-                // Search Bar
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: TextField(
+                            onChanged: (value) {
+                              setState(() {
+                                _searchQuery = value;
+                              });
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Search transactions...',
+                              hintStyle:
+                                  GoogleFonts.poppins(color: Colors.grey),
+                              border: InputBorder.none,
+                              icon:
+                                  const Icon(Icons.search, color: Colors.grey),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      PopupMenuButton<String>(
+                        onSelected: (value) {
+                          setState(() {
+                            _selectedFilter = value;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child:
+                              const Icon(Icons.filter_list, color: Colors.grey),
+                        ),
+                        itemBuilder: (context) => [
+                          'All',
+                          'Today',
+                          'This Week',
+                          'This Month',
+                        ]
+                            .map((filter) => PopupMenuItem(
+                                  value: filter,
+                                  child: Text(filter),
+                                ))
+                            .toList(),
+                      ),
+                    ],
+                  ),
+                ),
                 Expanded(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    margin: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.grey.withOpacity(0.1),
@@ -60,197 +206,138 @@ class _TransactionState extends State<Transaction> {
                         ),
                       ],
                     ),
-                    child: TextField(
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                        });
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'Search transactions...',
-                        hintStyle: GoogleFonts.poppins(color: Colors.grey),
-                        border: InputBorder.none,
-                        icon: const Icon(Icons.search, color: Colors.grey),
+                    child: SfDataGridTheme(
+                      data: SfDataGridThemeData(
+                        headerColor: Colors.grey[50],
+                        gridLineColor: Colors.grey[200]!,
+                        gridLineStrokeWidth: 1,
+                      ),
+                      child: SfDataGrid(
+                        source: _transactionDataSource,
+                        columnWidthMode: ColumnWidthMode.fill,
+                        gridLinesVisibility: GridLinesVisibility.both,
+                        headerGridLinesVisibility: GridLinesVisibility.both,
+                        rowHeight: 70,
+                        columns: [
+                          GridColumn(
+                            columnName: 'date',
+                            width: 150,
+                            label: Container(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.calendar_today,
+                                      size: 16, color: Colors.grey[600]),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      'Date & Time',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          GridColumn(
+                            columnName: 'transactionId',
+                            width: 140,
+                            label: Container(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.tag,
+                                      size: 16, color: Colors.grey[600]),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      'Transaction ID',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          GridColumn(
+                            columnName: 'amount',
+                            width: 120,
+                            label: Container(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.attach_money,
+                                      size: 16, color: Colors.grey[600]),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      'Amount',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          GridColumn(
+                            columnName: 'status',
+                            width: 120,
+                            label: Container(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.info_outline,
+                                      size: 16, color: Colors.grey[600]),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      'Status',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey[800],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                // Filter Button
-                PopupMenuButton<String>(
-                  onSelected: (value) {
-                    setState(() {
-                      _selectedFilter = value;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.filter_list, color: Colors.grey),
-                  ),
-                  itemBuilder: (context) => [
-                    'All',
-                    'Today',
-                    'This Week',
-                    'This Month',
-                  ]
-                      .map((filter) => PopupMenuItem(
-                            value: filter,
-                            child: Text(filter),
-                          ))
-                      .toList(),
                 ),
               ],
-            ),
-          ),
+            );
+          }
 
-          // Transaction Table
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: SfDataGridTheme(
-                data: SfDataGridThemeData(
-                  headerColor: Colors.grey[50],
-                  gridLineColor: Colors.grey[200]!,
-                  gridLineStrokeWidth: 1,
-                ),
-                child: SfDataGrid(
-                  source: _transactionDataSource,
-                  columnWidthMode: ColumnWidthMode.fill,
-                  gridLinesVisibility: GridLinesVisibility.both,
-                  headerGridLinesVisibility: GridLinesVisibility.both,
-                  rowHeight: 70,
-                  columns: [
-                    GridColumn(
-                      columnName: 'date',
-                      width: 150,
-                      label: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.calendar_today,
-                                size: 16, color: Colors.grey[600]),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                'Date & Time',
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[800],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'transactionId',
-                      width: 140,
-                      label: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.tag, size: 16, color: Colors.grey[600]),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                'Transaction ID',
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[800],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'amount',
-                      width: 120,
-                      label: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.attach_money,
-                                size: 16, color: Colors.grey[600]),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                'Amount',
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[800],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    GridColumn(
-                      columnName: 'status',
-                      width: 120,
-                      label: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.info_outline,
-                                size: 16, color: Colors.grey[600]),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                'Status',
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[800],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+          return const SizedBox();
+        },
       ),
     );
   }
@@ -298,6 +385,8 @@ class TransactionDataSource extends DataGridSource {
                   ? Colors.orange
                   : Colors.red;
         }
+
+        // Handle amount column
         if (cell.columnName == 'amount') {
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -312,6 +401,27 @@ class TransactionDataSource extends DataGridSource {
             ),
           );
         }
+
+        // Handle date and transactionId columns with smaller font
+        if (cell.columnName == 'date' || cell.columnName == 'transactionId') {
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            alignment: Alignment.center,
+            child: Text(
+              cell.value.toString(),
+              style: GoogleFonts.poppins(
+                color: textColor,
+                fontWeight: FontWeight.w500,
+                fontSize: 12, // Smaller font size for date and transaction ID
+              ),
+              maxLines: 1, // Ensure single line
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          );
+        }
+
+        // Default styling for other columns
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           alignment: Alignment.center,
@@ -345,14 +455,3 @@ class TransactionData {
     required this.status,
   });
 }
-
-// Sample data
-final List<TransactionData> transactions = [
-  TransactionData(
-    date: DateTime.now(),
-    transactionId: 'TRX-001',
-    amount: 150.00,
-    status: 'Completed',
-  ),
-  // Add more sample transactions
-];

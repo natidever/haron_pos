@@ -28,6 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  cached_network_image: ^3.3.1
   chapa_unofficial: ^0.0.5
   cupertino_icons: ^1.0.2
   flutter:
@@ -40,6 +41,8 @@ dependencies:
   image_picker: ^1.1.2
   intl: ^0.20.1
   logger: ^2.0.2+1
+  path_provider: ^2.1.5
+  pdf: ^3.11.1
   shimmer: ^3.0.0
   syncfusion_flutter_datagrid: ^27.2.4
 
@@ -63,6 +66,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/products/
+    - assets/images/products/place_holder.jpg
   #   - images/a_dot_ham.jpeg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

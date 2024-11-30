@@ -73,4 +73,17 @@ class Product {
   double get totalPrice {
     return finalPrice + taxAmount;
   }
+
+  String get displayImage {
+    // If image path starts with 'assets/', it's an asset image
+    if (image.startsWith('assets/')) {
+      return image;
+    }
+    // If image path starts with '/', it's a file system path
+    if (image.startsWith('/')) {
+      return image;
+    }
+    // Default to placeholder only if no valid path is found
+    return 'assets/images/products/place_holder.jpg';
+  }
 }

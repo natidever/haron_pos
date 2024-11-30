@@ -4,10 +4,14 @@ import 'package:flutter/services.dart';
 import 'package:chapa_unofficial/chapa_unofficial.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:haron_pos/bloc/transactions/bloc/transaction_bloc_bloc.dart';
 import 'package:haron_pos/pages/products/products.dart';
+import 'package:haron_pos/pages/transaction/transaction.dart';
 import 'package:logger/logger.dart';
 import '../../models/cart_item.dart';
 import '../../utils/logger.dart';
+import '../../models/transaction_model.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ChapaService {
   static var logger = Logger();
@@ -31,103 +35,29 @@ class ChapaService {
           onInAppPaymentSuccess: (successMsg) {
             logger.i('Payment Success: $successMsg');
 
-            // Show success dialog
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (BuildContext context) {
-                return Dialog(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Success Icon with Animation
-                        TweenAnimationBuilder<double>(
-                          duration: const Duration(milliseconds: 600),
-                          tween: Tween(begin: 0, end: 1),
-                          builder: (context, value, child) {
-                            return Transform.scale(
-                              scale: value,
-                              child: Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.shade50,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.check_circle,
-                                  color: Colors.green.shade400,
-                                  size: 72,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 24),
+            // Create and save transaction
+            final transaction = TransactionModel(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              date: DateTime.now(),
+              transactionId: 'TRX-${DateTime.now().millisecondsSinceEpoch}',
+              amount: total,
+              status: 'Completed',
+              items: items.map((item) => item.product.id).toList(),
+              paymentMethod: paymentMethod,
+            );
 
-                        // Success Message
-                        Text(
-                          'Payment Successful!',
-                          style: GoogleFonts.poppins(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green.shade700,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Your transaction has been completed',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(
-                            fontSize: 16,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
+            // Add transaction to bloc
+            context
+                .read<TransactionBloc>()
+                .add(AddTransactionEvent(transaction));
 
-                        // Continue Button
-                        ElevatedButton(
-                          onPressed: () {
-                            // Close dialog and navigate
-                            Navigator.of(context).pop();
-                            onSuccess();
-
-                            // Navigate to products page
-                            Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(
-                                builder: (context) => const ProductsPage(),
-                              ),
-                              (route) => false, // Remove all previous routes
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 32,
-                              vertical: 12,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            'Continue Shopping',
-                            style: GoogleFonts.poppins(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
+            // Navigate to transaction page
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProductsPage(),
+              ),
+              (route) => false, // This removes all previous routes
             );
           },
           onInAppPaymentError: (errorMsg) {

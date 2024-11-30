@@ -5,6 +5,7 @@ import '../pages/products/product_detail.dart';
 import 'package:logger/logger.dart';
 // import 'package:flutter_snackbar/flutter_snackbar.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:io';
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -50,7 +51,10 @@ class ProductCard extends StatelessWidget {
                     child: SizedBox(
                       width: double.infinity,
                       child: Image(
-                        image: AssetImage(product.image),
+                        image: product.image.startsWith('assets/')
+                            ? AssetImage(product.displayImage)
+                            : FileImage(File(product.displayImage))
+                                as ImageProvider,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
                           logger.e('Error loading image: $error',
