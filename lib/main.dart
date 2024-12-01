@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:haron_pos/bloc/cart/cart_bloc.dart';
 import 'package:haron_pos/bloc/transactions/bloc/transaction_bloc_bloc.dart';
 import 'package:haron_pos/models/transaction_model.dart';
+import 'package:haron_pos/signup.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:haron_pos/bloc/prodct/products_bloc.dart';
 import 'package:haron_pos/models/product_model.dart';
@@ -11,6 +12,7 @@ import 'package:haron_pos/pages/products/products.dart';
 import 'package:haron_pos/pages/main_screen.dart';
 import 'package:haron_pos/navigation/bottom_nav_bar.dart';
 import 'package:chapa_unofficial/chapa_unofficial.dart';
+import 'package:haron_pos/bloc/form/form_bloc.dart';
 // import 'package:haron_pos/bloc/transaction/transaction_bloc.dart';
 
 void main() async {
@@ -41,6 +43,7 @@ void main() async {
         BlocProvider(create: (context) => ProductsBloc()),
         BlocProvider(create: (context) => CartBloc()),
         BlocProvider(create: (context) => TransactionBloc()),
+        BlocProvider(create: (context) => FormBloc()),
       ],
       child: MaterialApp(
         title: 'Haron POS',
@@ -49,7 +52,8 @@ void main() async {
           primaryColor: Colors.blue,
           // textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
         ),
-        home: const BottomNavBar(),
+        // home: const BottomNavBar(),
+        home: const Signup(),
       ),
     ),
   );
@@ -65,6 +69,7 @@ class MyApp extends StatelessWidget {
         BlocProvider(create: (context) => ProductsBloc()),
         BlocProvider(create: (context) => CartBloc()),
         BlocProvider(create: (context) => TransactionBloc()),
+        BlocProvider(create: (context) => FormBloc()),
       ],
       child: MaterialApp(
         title: 'Haron POS',
@@ -73,7 +78,8 @@ class MyApp extends StatelessWidget {
           primaryColor: Colors.blue,
           textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
         ),
-        home: const BottomNavBar(),
+        home: const Signup(),
+        // home: const BottomNavBar(),
       ),
     );
   }

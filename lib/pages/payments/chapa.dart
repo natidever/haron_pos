@@ -5,6 +5,7 @@ import 'package:chapa_unofficial/chapa_unofficial.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:haron_pos/bloc/transactions/bloc/transaction_bloc_bloc.dart';
+import 'package:haron_pos/pages/main_screen.dart';
 import 'package:haron_pos/pages/products/products.dart';
 import 'package:haron_pos/pages/transaction/transaction.dart';
 import 'package:logger/logger.dart';
@@ -55,7 +56,7 @@ class ChapaService {
             Navigator.pushAndRemoveUntil(
               context,
               MaterialPageRoute(
-                builder: (context) => const ProductsPage(),
+                builder: (context) => const MainScreen(),
               ),
               (route) => false, // This removes all previous routes
             );

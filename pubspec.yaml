@@ -38,9 +38,11 @@ dependencies:
   google_fonts: ^6.1.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  hydrated_bloc: ^9.1.5
   image_picker: ^1.1.2
   intl: ^0.20.1
   logger: ^2.0.2+1
+  open_file: ^3.3.2
   path_provider: ^2.1.5
   pdf: ^3.11.1
   shimmer: ^3.0.0
@@ -67,6 +69,7 @@ flutter:
   assets:
     - assets/images/products/
     - assets/images/products/place_holder.jpg
+    - assets/icon/
   #   - images/a_dot_ham.jpeg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
@@ -91,3 +94,7 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
+  fonts:
+    - family: OpenSans
+      fonts:
+        - asset: assets/fonts/OpenSans-Regular.ttf

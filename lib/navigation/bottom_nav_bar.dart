@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:haron_pos/pages/products/products.dart';
+import 'package:haron_pos/pages/profile.dart';
 import 'package:haron_pos/pages/transaction/transaction.dart';
+// import 'package:haron_pos/pages/profile/profile.dart';
 import 'package:haron_pos/utils/logger.dart';
 import 'package:logger/logger.dart';
 
@@ -20,7 +22,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
   final List<Widget> _pages = [
     const ProductsPage(),
     const Transaction(), // Placeholder for Sales page
-    const ProductsPage(), // Placeholder for Profile page
+    const Profile(), // Changed from ProductsPage to Profile
   ];
 
   void _onItemTapped(int index) {

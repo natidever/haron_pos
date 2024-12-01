@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:haron_pos/pages/products/products.dart';
+import 'package:haron_pos/pages/profile.dart';
 import 'package:haron_pos/pages/transaction/transaction.dart';
 import 'package:haron_pos/utils/logger.dart';
 import 'package:logger/logger.dart';
@@ -20,7 +21,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = [
     const ProductsPage(),
     const Transaction(), // Placeholder for Sales page
-    const ProductsPage(), // Placeholder for Profile page
+    const Profile(), // Placeholder for Profile page
   ];
 
   void _onItemTapped(int index) {

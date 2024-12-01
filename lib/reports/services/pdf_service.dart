@@ -3,20 +3,33 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../models/daily_report_model.dart';
+import 'package:flutter/services.dart';
 
 class PdfService {
   static Future<File> generateDailyReport(DailyReport report) async {
     final pdf = pw.Document();
 
-    // Add content to the PDF with standard font
+    // Use a Unicode-compatible font
+    final ttf = await pw.Font.ttf(
+        await rootBundle.load('assets/fonts/OpenSans-Regular.ttf'));
+
+    // Create a base style with our custom font
+    final baseStyle = pw.TextStyle(font: ttf);
+    final boldStyle = pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold);
+
+    // Add content to the PDF with Unicode font
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
+        theme: pw.ThemeData.withFont(
+          base: ttf,
+          bold: ttf, // Use same font for bold text
+        ),
         build: (context) => [
-          _buildHeader(report),
-          _buildSummary(report),
-          _buildPaymentMethods(report),
-          _buildTopItems(report),
+          _buildHeader(report, boldStyle, baseStyle),
+          _buildSummary(report, boldStyle, baseStyle),
+          _buildPaymentMethods(report, boldStyle, baseStyle),
+          _buildTopItems(report, boldStyle, baseStyle),
         ],
       ),
     );
@@ -29,7 +42,8 @@ class PdfService {
     return file;
   }
 
-  static pw.Widget _buildHeader(DailyReport report) {
+  static pw.Widget _buildHeader(
+      DailyReport report, pw.TextStyle boldStyle, pw.TextStyle baseStyle) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(20),
       decoration: pw.BoxDecoration(
@@ -41,22 +55,20 @@ class PdfService {
         children: [
           pw.Text(
             'Daily Sales Report',
-            style: pw.TextStyle(
-              fontSize: 24,
-              fontWeight: pw.FontWeight.bold,
-            ),
+            style: boldStyle.copyWith(fontSize: 24),
           ),
           pw.SizedBox(height: 10),
           pw.Text(
             'Date: ${report.date.toString().split(' ')[0]}',
-            style: const pw.TextStyle(fontSize: 16),
+            style: baseStyle.copyWith(fontSize: 16),
           ),
         ],
       ),
     );
   }
 
-  static pw.Widget _buildSummary(DailyReport report) {
+  static pw.Widget _buildSummary(
+      DailyReport report, pw.TextStyle boldStyle, pw.TextStyle baseStyle) {
     return pw.Container(
       margin: const pw.EdgeInsets.symmetric(vertical: 20),
       child: pw.Row(
@@ -65,17 +77,22 @@ class PdfService {
           _buildSummaryCard(
             'Total Sales',
             '\$${report.totalSales.toStringAsFixed(2)}',
+            boldStyle,
+            baseStyle,
           ),
           _buildSummaryCard(
             'Transactions',
             report.transactionCount.toString(),
+            boldStyle,
+            baseStyle,
           ),
         ],
       ),
     );
   }
 
-  static pw.Widget _buildSummaryCard(String title, String value) {
+  static pw.Widget _buildSummaryCard(String title, String value,
+      pw.TextStyle boldStyle, pw.TextStyle baseStyle) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(15),
       decoration: pw.BoxDecoration(
@@ -86,22 +103,20 @@ class PdfService {
         children: [
           pw.Text(
             title,
-            style: pw.TextStyle(
-              fontSize: 14,
-              fontWeight: pw.FontWeight.bold,
-            ),
+            style: boldStyle.copyWith(fontSize: 14),
           ),
           pw.SizedBox(height: 5),
           pw.Text(
             value,
-            style: const pw.TextStyle(fontSize: 20),
+            style: baseStyle.copyWith(fontSize: 20),
           ),
         ],
       ),
     );
   }
 
-  static pw.Widget _buildPaymentMethods(DailyReport report) {
+  static pw.Widget _buildPaymentMethods(
+      DailyReport report, pw.TextStyle boldStyle, pw.TextStyle baseStyle) {
     return pw.Container(
       margin: const pw.EdgeInsets.symmetric(vertical: 20),
       child: pw.Column(
@@ -109,10 +124,7 @@ class PdfService {
         children: [
           pw.Text(
             'Payment Methods',
-            style: pw.TextStyle(
-              fontSize: 18,
-              fontWeight: pw.FontWeight.bold,
-            ),
+            style: boldStyle.copyWith(fontSize: 18),
           ),
           pw.SizedBox(height: 10),
           ...report.paymentMethodTotals.entries.map((entry) => pw.Container(
@@ -127,14 +139,11 @@ class PdfService {
                   children: [
                     pw.Text(
                       entry.key,
-                      style: const pw.TextStyle(fontSize: 14),
+                      style: baseStyle.copyWith(fontSize: 14),
                     ),
                     pw.Text(
                       '\$${entry.value.toStringAsFixed(2)}',
-                      style: pw.TextStyle(
-                        fontSize: 14,
-                        fontWeight: pw.FontWeight.bold,
-                      ),
+                      style: boldStyle.copyWith(fontSize: 14),
                     ),
                   ],
                 ),
@@ -144,7 +153,8 @@ class PdfService {
     );
   }
 
-  static pw.Widget _buildTopItems(DailyReport report) {
+  static pw.Widget _buildTopItems(
+      DailyReport report, pw.TextStyle boldStyle, pw.TextStyle baseStyle) {
     return pw.Container(
       margin: const pw.EdgeInsets.symmetric(vertical: 20),
       child: pw.Column(
@@ -152,10 +162,7 @@ class PdfService {
         children: [
           pw.Text(
             'Top Selling Items',
-            style: pw.TextStyle(
-              fontSize: 18,
-              fontWeight: pw.FontWeight.bold,
-            ),
+            style: boldStyle.copyWith(fontSize: 18),
           ),
           pw.SizedBox(height: 10),
           pw.Table(
@@ -165,15 +172,23 @@ class PdfService {
               pw.TableRow(
                 decoration: pw.BoxDecoration(color: PdfColors.grey100),
                 children: [
-                  _buildTableCell('Item ID', isHeader: true),
-                  _buildTableCell('Quantity', isHeader: true),
+                  _buildTableCell('Item ID',
+                      isHeader: true,
+                      boldStyle: boldStyle,
+                      baseStyle: baseStyle),
+                  _buildTableCell('Quantity',
+                      isHeader: true,
+                      boldStyle: boldStyle,
+                      baseStyle: baseStyle),
                 ],
               ),
               // Data rows
               ...report.topSellingItems.map((item) => pw.TableRow(
                     children: [
-                      _buildTableCell(item.id),
-                      _buildTableCell(item.quantity.toString()),
+                      _buildTableCell(item.id,
+                          boldStyle: boldStyle, baseStyle: baseStyle),
+                      _buildTableCell(item.quantity.toString(),
+                          boldStyle: boldStyle, baseStyle: baseStyle),
                     ],
                   )),
             ],
@@ -183,7 +198,10 @@ class PdfService {
     );
   }
 
-  static pw.Widget _buildTableCell(String text, {bool isHeader = false}) {
+  static pw.Widget _buildTableCell(String text,
+      {bool isHeader = false,
+      pw.TextStyle? boldStyle,
+      pw.TextStyle? baseStyle}) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(8),
       alignment: pw.Alignment.center,
@@ -191,7 +209,8 @@ class PdfService {
         text,
         style: pw.TextStyle(
           fontSize: 12,
-          fontWeight: isHeader ? pw.FontWeight.bold : null,
+          fontWeight: isHeader ? boldStyle?.fontWeight : null,
+          font: isHeader ? boldStyle?.font : baseStyle?.font,
         ),
       ),
     );
