@@ -52,6 +52,7 @@ A modern Point of Sale (POS) system built with Flutter, featuring a clean UI, of
   <img src="assets/screenshots/home.jpg"  alt=" home"  width="200" />
   <img src="assets/screenshots/addProductjpg.jpg" alt="add product " width="200" /> 
   <img src="assets/screenshots/checkout.jpg" alt="checkout " width="200" />
+  <img src="assets/screenshots/chapa.jpg" alt="checkout " width="200" />
   <img src="assets/screenshots/success.jpg" alt="success" width="200" />
 </p
 
