@@ -9,6 +9,7 @@ class CustomForm extends StatefulWidget {
   final String? labelText;
   final VoidCallback? onTap;
   final String? hintText;
+  final ThemeData theme;
 
   const CustomForm({
     super.key,
@@ -17,6 +18,7 @@ class CustomForm extends StatefulWidget {
     this.controller,
     this.isPasswordVisible,
     this.hintText,
+    required this.theme,
   });
 
   @override
@@ -47,7 +49,7 @@ class _CustomFormState extends State<CustomForm> {
               onTap: widget.onTap,
               style: GoogleFonts.lexend(
                 fontSize: 14,
-                color: const Color.fromRGBO(16, 19, 23, 1),
+                color: widget.theme.colorScheme.onBackground,
                 fontWeight: FontWeight.w300,
               ),
               focusNode: _focusNode,
@@ -57,16 +59,21 @@ class _CustomFormState extends State<CustomForm> {
                   : false,
               decoration: InputDecoration(
                 hintText: widget.hintText,
+                hintStyle: GoogleFonts.lexend(
+                  color: widget.theme.colorScheme.onBackground.withOpacity(0.5),
+                  fontSize: 14,
+                ),
                 contentPadding: const EdgeInsets.fromLTRB(15, 50, 0, 0),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide:
-                      const BorderSide(color: Color.fromRGBO(218, 218, 218, 1)),
+                  borderSide: BorderSide(color: widget.theme.dividerColor),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Colors.blue),
+                  borderSide: BorderSide(color: widget.theme.primaryColor),
                 ),
+                filled: true,
+                fillColor: widget.theme.cardColor,
                 suffixIcon: widget.isPasswordVisible ?? false
                     ? IconButton(
                         onPressed: () {

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:haron_pos/bloc/cart/cart_bloc.dart';
+import 'package:haron_pos/bloc/theme/theme_bloc.dart';
 import 'package:haron_pos/models/product_model.dart';
 import 'package:haron_pos/utils/logger.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -132,13 +133,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
-  Widget _buildPaymentButton(CartState state) {
+  Widget _buildPaymentButton(CartState state, ThemeData theme) {
     return ElevatedButton(
       onPressed: state.selectedPaymentMethod.isEmpty
           ? null
           : () => _processPayment(state),
       style: ElevatedButton.styleFrom(
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: theme.primaryColor,
+        disabledBackgroundColor: theme.disabledColor,
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -150,7 +152,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
         style: GoogleFonts.poppins(
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: Colors.white,
+          color: state.selectedPaymentMethod.isEmpty
+              ? theme.colorScheme.onSurface.withOpacity(0.38)
+              : theme.colorScheme.onPrimary,
         ),
       ),
     );
@@ -158,100 +162,121 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<CartBloc, CartState>(
-      builder: (context, state) {
-        if (state.items.isEmpty) {
-          return Scaffold(
-              body: const Center(child: Text('Your cart is empty')));
-        }
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        final theme = Theme.of(context);
 
-        return Scaffold(
-          backgroundColor: Colors.grey[100],
-          appBar: AppBar(
-            title: Text(
-              'Checkout',
-              style: GoogleFonts.poppins(
-                color: Colors.black87,
-                fontWeight: FontWeight.w600,
+        return BlocBuilder<CartBloc, CartState>(
+          builder: (context, state) {
+            if (state.items.isEmpty) {
+              return Scaffold(
+                backgroundColor: theme.scaffoldBackgroundColor,
+                body: Center(
+                  child: Text(
+                    'Your cart is empty',
+                    style: GoogleFonts.poppins(
+                      color: theme.colorScheme.onBackground,
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return Scaffold(
+              backgroundColor: theme.scaffoldBackgroundColor,
+              appBar: AppBar(
+                title: Text(
+                  'Checkout',
+                  style: GoogleFonts.poppins(
+                    color: theme.colorScheme.onBackground,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                iconTheme: IconThemeData(color: theme.colorScheme.onBackground),
               ),
-            ),
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            iconTheme: const IconThemeData(color: Colors.black87),
-          ),
-          body: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                CartSummary(
-                  items: state.items,
-                  total: state.total,
-                ),
-                const SizedBox(height: 16),
-                // Payment Methods
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Text(
-                          'Payment Method',
-                          style: GoogleFonts.poppins(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
+              body: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    CartSummary(
+                      items: state.items,
+                      total: state.total,
+                      theme: theme,
+                    ),
+                    const SizedBox(height: 16),
+                    // Payment Methods
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: theme.cardColor,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: theme.shadowColor,
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                        ),
+                        ],
                       ),
-                      const Divider(height: 1),
-                      ...paymentMethods.map((method) {
-                        final (title, subtitle, icon) = method;
-                        return _PaymentOption(
-                          title: title,
-                          subtitle: subtitle,
-                          icon: icon,
-                          isSelected: state.selectedPaymentMethod == title,
-                          onTap: () {
-                            context
-                                .read<CartBloc>()
-                                .add(SelectPaymentMethodEvent(title));
-                          },
-                        );
-                      }),
-                    ],
-                  ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Text(
+                              'Payment Method',
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onBackground,
+                              ),
+                            ),
+                          ),
+                          Divider(
+                            height: 1,
+                            color: theme.dividerColor,
+                          ),
+                          ...paymentMethods.map((method) {
+                            final (title, subtitle, icon) = method;
+                            return _PaymentOption(
+                              title: title,
+                              subtitle: subtitle,
+                              icon: icon,
+                              isSelected: state.selectedPaymentMethod == title,
+                              onTap: () {
+                                context
+                                    .read<CartBloc>()
+                                    .add(SelectPaymentMethodEvent(title));
+                              },
+                              theme: theme,
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          bottomNavigationBar: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, -4),
+              ),
+              bottomNavigationBar: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.shadowColor,
+                      blurRadius: 10,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: SafeArea(
-              child: _buildPaymentButton(state),
-            ),
-          ),
+                child: SafeArea(
+                  child: _buildPaymentButton(state, theme),
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -264,6 +289,7 @@ class _PaymentOption extends StatelessWidget {
   final IconData icon;
   final bool isSelected;
   final VoidCallback onTap;
+  final ThemeData theme;
 
   const _PaymentOption({
     required this.title,
@@ -271,6 +297,7 @@ class _PaymentOption extends StatelessWidget {
     required this.icon,
     required this.isSelected,
     required this.onTap,
+    required this.theme,
   });
 
   @override
@@ -279,22 +306,22 @@ class _PaymentOption extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
-        color: isSelected ? Colors.blue.withOpacity(0.05) : null,
+        color: isSelected ? theme.primaryColor.withOpacity(0.05) : null,
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? Theme.of(context).primaryColor.withOpacity(0.1)
-                    : Colors.grey[100],
+                    ? theme.primaryColor.withOpacity(0.1)
+                    : theme.cardColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
                 color: isSelected
-                    ? Theme.of(context).primaryColor
-                    : Colors.grey[600],
+                    ? theme.primaryColor
+                    : theme.colorScheme.onBackground.withOpacity(0.6),
               ),
             ),
             const SizedBox(width: 16),
@@ -306,12 +333,13 @@ class _PaymentOption extends StatelessWidget {
                     title,
                     style: GoogleFonts.poppins(
                       fontWeight: FontWeight.w600,
+                      color: theme.colorScheme.onBackground,
                     ),
                   ),
                   Text(
                     subtitle,
                     style: GoogleFonts.poppins(
-                      color: Colors.grey[600],
+                      color: theme.colorScheme.onBackground.withOpacity(0.6),
                       fontSize: 12,
                     ),
                   ),
@@ -322,7 +350,7 @@ class _PaymentOption extends StatelessWidget {
               value: true,
               groupValue: isSelected,
               onChanged: (_) => onTap(),
-              activeColor: Theme.of(context).primaryColor,
+              activeColor: theme.primaryColor,
             ),
           ],
         ),

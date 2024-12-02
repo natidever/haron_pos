@@ -13,6 +13,9 @@ import 'package:haron_pos/pages/main_screen.dart';
 import 'package:haron_pos/navigation/bottom_nav_bar.dart';
 import 'package:chapa_unofficial/chapa_unofficial.dart';
 import 'package:haron_pos/bloc/form/form_bloc.dart';
+import 'package:haron_pos/theme/app_theme.dart';
+import 'package:haron_pos/bloc/theme/theme_bloc.dart';
+
 // import 'package:haron_pos/bloc/transaction/transaction_bloc.dart';
 
 void main() async {
@@ -44,17 +47,9 @@ void main() async {
         BlocProvider(create: (context) => CartBloc()),
         BlocProvider(create: (context) => TransactionBloc()),
         BlocProvider(create: (context) => FormBloc()),
+        BlocProvider(create: (context) => ThemeBloc()..add(InitTheme())),
       ],
-      child: MaterialApp(
-        title: 'Haron POS',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          primaryColor: Colors.blue,
-          // textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
-        ),
-        // home: const BottomNavBar(),
-        home: const Signup(),
-      ),
+      child: const MyApp(),
     ),
   );
 }
@@ -64,23 +59,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (context) => ProductsBloc()),
-        BlocProvider(create: (context) => CartBloc()),
-        BlocProvider(create: (context) => TransactionBloc()),
-        BlocProvider(create: (context) => FormBloc()),
-      ],
-      child: MaterialApp(
-        title: 'Haron POS',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          primaryColor: Colors.blue,
-          textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
-        ),
-        home: const Signup(),
-        // home: const BottomNavBar(),
-      ),
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, state) {
+        return MaterialApp(
+          title: 'Haron POS',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: state.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          home: const Signup(),
+        );
+      },
     );
   }
 }

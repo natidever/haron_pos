@@ -5,7 +5,8 @@ import 'package:haron_pos/setting.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:haron_pos/models/transaction_model.dart';
 import 'package:haron_pos/reports/widgets/custom_text.dart';
-// import 'package:haron_pos/pages/settings.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:haron_pos/bloc/theme/theme_bloc.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -57,102 +58,131 @@ class _ProfileState extends State<Profile> {
 
   @override
   Widget build(BuildContext context) {
-    // Use ValueListenableBuilder to rebuild only when transaction data changes
-    return ValueListenableBuilder(
-      valueListenable: Hive.box<TransactionModel>('transactions').listenable(),
-      builder: (context, Box<TransactionModel> box, _) {
-        return Scaffold(
-          backgroundColor: Colors.grey[100],
-          body: SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: primaryColor,
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(30),
-                        bottomRight: Radius.circular(30),
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        const CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.white,
-                          child: Icon(
-                            Icons.person,
-                            size: 50,
-                            color: primaryColor,
+    return BlocBuilder<ThemeBloc, ThemeState>(
+      builder: (context, themeState) {
+        final theme = Theme.of(context);
+
+        return ValueListenableBuilder(
+          valueListenable:
+              Hive.box<TransactionModel>('transactions').listenable(),
+          builder: (context, Box<TransactionModel> box, _) {
+            return Scaffold(
+              backgroundColor: theme.scaffoldBackgroundColor,
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // Profile Header
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: theme.primaryColor,
+                          borderRadius: const BorderRadius.only(
+                            bottomLeft: Radius.circular(30),
+                            bottomRight: Radius.circular(30),
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.shadowColor,
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          userEmail,
-                          style: GoogleFonts.lexend(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        _buildStatCard(
-                          'Total Transactions',
-                          box.length.toString(),
-                          Icons.receipt_long,
-                        ),
-                        const SizedBox(height: 15),
-                        _buildStatCard(
-                          'Total Sales',
-                          '\$${_calculateTotalSales(box).toStringAsFixed(2)}',
-                          Icons.attach_money,
-                        ),
-                        const SizedBox(height: 20),
-                        _buildActionButton(
-                          'Generate Report',
-                          Icons.assessment,
-                          () {
-                            // Implement report generation
-                          },
-                        ),
-                        const SizedBox(height: 15),
-                        _buildActionButton(
-                          'Settings',
-                          Icons.settings,
-                          () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const SettingsPage(),
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surface,
+                                shape: BoxShape.circle,
                               ),
-                            );
-                          },
+                              child: CircleAvatar(
+                                radius: 50,
+                                backgroundColor: theme.cardColor,
+                                child: Icon(
+                                  Icons.person,
+                                  size: 50,
+                                  color: theme.primaryColor,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              userEmail,
+                              style: GoogleFonts.lexend(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w500,
+                                color: theme.colorScheme.onPrimary,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 15),
-                        _buildActionButton(
-                          'Logout',
-                          Icons.logout,
-                          () {
-                            Navigator.pushReplacementNamed(context, '/login');
-                          },
-                          color: Colors.red[400],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Stats and Actions
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Column(
+                          children: [
+                            _buildStatCard(
+                              'Total Transactions',
+                              box.length.toString(),
+                              Icons.receipt_long,
+                              theme,
+                            ),
+                            const SizedBox(height: 15),
+                            _buildStatCard(
+                              'Total Sales',
+                              '\$${_calculateTotalSales(box).toStringAsFixed(2)}',
+                              Icons.attach_money,
+                              theme,
+                            ),
+                            const SizedBox(height: 20),
+                            _buildActionButton(
+                              'Generate Report',
+                              Icons.assessment,
+                              () {
+                                // Implement report generation
+                              },
+                              theme: theme,
+                            ),
+                            const SizedBox(height: 15),
+                            _buildActionButton(
+                              'Settings',
+                              Icons.settings,
+                              () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const SettingsPage(),
+                                  ),
+                                );
+                              },
+                              theme: theme,
+                            ),
+                            const SizedBox(height: 15),
+                            _buildActionButton(
+                              'Logout',
+                              Icons.logout,
+                              () {
+                                Navigator.pushReplacementNamed(
+                                    context, '/login');
+                              },
+                              color: Colors.red[400],
+                              theme: theme,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
@@ -167,15 +197,16 @@ class _ProfileState extends State<Profile> {
     });
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon) {
+  Widget _buildStatCard(
+      String title, String value, IconData icon, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: theme.shadowColor,
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -187,10 +218,10 @@ class _ProfileState extends State<Profile> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: primaryColor.withOpacity(0.1),
+              color: theme.primaryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: primaryColor),
+            child: Icon(icon, color: theme.primaryColor),
           ),
           const SizedBox(width: 15),
           Column(
@@ -200,7 +231,7 @@ class _ProfileState extends State<Profile> {
                 title,
                 style: GoogleFonts.lexend(
                   fontSize: 14,
-                  color: Colors.grey[600],
+                  color: theme.colorScheme.onBackground.withOpacity(0.6),
                 ),
               ),
               Text(
@@ -208,7 +239,7 @@ class _ProfileState extends State<Profile> {
                 style: GoogleFonts.lexend(
                   fontSize: 20,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+                  color: theme.colorScheme.onBackground,
                 ),
               ),
             ],
@@ -218,20 +249,26 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  Widget _buildActionButton(String title, IconData icon, VoidCallback onTap,
-      {Color? color}) {
+  Widget _buildActionButton(
+    String title,
+    IconData icon,
+    VoidCallback onTap, {
+    Color? color,
+    required ThemeData theme,
+  }) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(15),
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: theme.shadowColor,
                 spreadRadius: 1,
                 blurRadius: 4,
                 offset: const Offset(0, 2),
@@ -240,20 +277,23 @@ class _ProfileState extends State<Profile> {
           ),
           child: Row(
             children: [
-              Icon(icon, color: color ?? primaryColor),
+              Icon(
+                icon,
+                color: color ?? theme.primaryColor,
+              ),
               const SizedBox(width: 15),
               Text(
                 title,
                 style: GoogleFonts.lexend(
                   fontSize: 16,
-                  color: color ?? Colors.black87,
+                  color: color ?? theme.colorScheme.onBackground,
                 ),
               ),
               const Spacer(),
               Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
-                color: Colors.grey[400],
+                color: theme.colorScheme.onBackground.withOpacity(0.4),
               ),
             ],
           ),

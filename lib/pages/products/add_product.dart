@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:haron_pos/bloc/prodct/products_bloc.dart';
+import 'package:haron_pos/bloc/theme/theme_bloc.dart';
 import 'package:haron_pos/models/product_model.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../widgets/custom_form_field.dart';
@@ -376,154 +377,167 @@ class _AddProductPageState extends State<AddProductPage> {
           );
         }
       },
-      child: Scaffold(
-        backgroundColor: Colors.grey[100],
-        appBar: AppBar(
-          title: Text(
-            'Add New Product',
-            style: GoogleFonts.poppins(
-              color: Colors.black87,
-              fontWeight: FontWeight.w600,
+      child: BlocBuilder<ThemeBloc, ThemeState>(
+        builder: (context, state) {
+          final theme = Theme.of(context);
+
+          return Scaffold(
+            backgroundColor: theme.scaffoldBackgroundColor,
+            appBar: AppBar(
+              title: Text(
+                'Add Product',
+                style: GoogleFonts.poppins(
+                  color: theme.colorScheme.onBackground,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              iconTheme: IconThemeData(color: theme.colorScheme.onBackground),
             ),
-          ),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          iconTheme: const IconThemeData(color: Colors.black87),
-        ),
-        body: SingleChildScrollView(
-          controller: _scrollController,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _buildImageSection(),
-                const SizedBox(height: 24),
-
-                // Toggle Buttons for form sections
-                Row(
-                  children: [
-                    Expanded(
-                      child: _SectionButton(
-                        title: 'Basic Info',
-                        isSelected: _isBasicInfo,
-                        onTap: () => setState(() => _isBasicInfo = true),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _SectionButton(
-                        title: 'Inventory',
-                        isSelected: !_isBasicInfo,
-                        onTap: () => setState(() => _isBasicInfo = false),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Form Sections
-                AnimatedCrossFade(
-                  duration: const Duration(milliseconds: 300),
-                  crossFadeState: _isBasicInfo
-                      ? CrossFadeState.showFirst
-                      : CrossFadeState.showSecond,
-                  firstChild: _BasicInfoForm(
-                    formKey: _basicInfoFormKey,
-                    nameController: _nameController,
-                    descriptionController: _descriptionController,
-                    priceController: _priceController,
-                    categoryController: _categoryController,
-                    discountController: _discountController,
-                    taxController: _taxController,
-                  ),
-                  secondChild: _InventoryForm(
-                    formKey: _inventoryFormKey,
-                    skuController: _skuController,
-                    barcodeController: _barcodeController,
-                    stockController: _stockController,
-                    supplierController: _supplierController,
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Submit Button
-                ElevatedButton(
-                  onPressed: () {
-                    logger.i('Submit button pressed');
-                    final isBasicInfoValid =
-                        _basicInfoFormKey.currentState?.validate() ?? false;
-                    final isInventoryValid =
-                        _inventoryFormKey.currentState?.validate() ?? false;
-
-                    if (_isBasicInfo) {
-                      if (isBasicInfoValid) {
-                        setState(() => _isBasicInfo = false);
-                        logger.i('Moving to inventory section');
-                      }
-                    } else {
-                      if (isBasicInfoValid && isInventoryValid) {
-                        logger.i('Creating product object');
-                        final product = Product(
-                          name: _nameController.text,
-                          image: _selectedImage?.path ??
-                              'assets/images/products/place_holder.jpg',
-                          category: _categoryController.text,
-                          price: double.tryParse(_priceController.text) ?? 0,
-                          description: _descriptionController.text,
-                          quantityInStock:
-                              int.tryParse(_stockController.text) ?? 0,
-                          sku: _skuController.text,
-                          barcode: _barcodeController.text,
-                          supplier: _supplierController.text,
-                          discount:
-                              double.tryParse(_discountController.text) ?? 0,
-                          taxRate: double.tryParse(_taxController.text) ?? 0,
-                        );
-
-                        logger.i(
-                            'Creating product with image: ${_selectedImage?.path ?? "placeholder"}');
-                        context
-                            .read<ProductsBloc>()
-                            .add(AddProductEvent(product));
-                      }
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Theme.of(context).primaryColor,
-                    shape: RoundedRectangleBorder(
+            body: SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Image picker section with theme colors
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.cardColor,
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.dividerColor),
+                    ),
+                    child: _buildImageSection(),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Toggle Buttons for form sections
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _SectionButton(
+                          title: 'Basic Info',
+                          isSelected: _isBasicInfo,
+                          onTap: () => setState(() => _isBasicInfo = true),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _SectionButton(
+                          title: 'Inventory',
+                          isSelected: !_isBasicInfo,
+                          onTap: () => setState(() => _isBasicInfo = false),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Form Sections
+                  AnimatedCrossFade(
+                    duration: const Duration(milliseconds: 300),
+                    crossFadeState: _isBasicInfo
+                        ? CrossFadeState.showFirst
+                        : CrossFadeState.showSecond,
+                    firstChild: _BasicInfoForm(
+                      formKey: _basicInfoFormKey,
+                      nameController: _nameController,
+                      descriptionController: _descriptionController,
+                      priceController: _priceController,
+                      categoryController: _categoryController,
+                      discountController: _discountController,
+                      taxController: _taxController,
+                      theme: theme,
+                    ),
+                    secondChild: _InventoryForm(
+                      formKey: _inventoryFormKey,
+                      skuController: _skuController,
+                      barcodeController: _barcodeController,
+                      stockController: _stockController,
+                      supplierController: _supplierController,
+                      theme: theme,
                     ),
                   ),
-                  child: BlocBuilder<ProductsBloc, ProductsState>(
-                    builder: (context, state) {
-                      if (state is ProductAdding) {
-                        return const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
+
+                  const SizedBox(height: 32),
+
+                  // Submit Button
+                  ElevatedButton(
+                    onPressed: () {
+                      logger.i('Submit button pressed');
+                      final isBasicInfoValid =
+                          _basicInfoFormKey.currentState?.validate() ?? false;
+                      final isInventoryValid =
+                          _inventoryFormKey.currentState?.validate() ?? false;
+
+                      if (_isBasicInfo) {
+                        if (isBasicInfoValid) {
+                          setState(() => _isBasicInfo = false);
+                          logger.i('Moving to inventory section');
+                        }
+                      } else {
+                        if (isBasicInfoValid && isInventoryValid) {
+                          logger.i('Creating product object');
+                          final product = Product(
+                            name: _nameController.text,
+                            image: _selectedImage?.path ??
+                                'assets/images/products/place_holder.jpg',
+                            category: _categoryController.text,
+                            price: double.tryParse(_priceController.text) ?? 0,
+                            description: _descriptionController.text,
+                            quantityInStock:
+                                int.tryParse(_stockController.text) ?? 0,
+                            sku: _skuController.text,
+                            barcode: _barcodeController.text,
+                            supplier: _supplierController.text,
+                            discount:
+                                double.tryParse(_discountController.text) ?? 0,
+                            taxRate: double.tryParse(_taxController.text) ?? 0,
+                          );
+
+                          logger.i(
+                              'Creating product with image: ${_selectedImage?.path ?? "placeholder"}');
+                          context
+                              .read<ProductsBloc>()
+                              .add(AddProductEvent(product));
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: Theme.of(context).primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: BlocBuilder<ProductsBloc, ProductsState>(
+                      builder: (context, state) {
+                        if (state is ProductAdding) {
+                          return const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          );
+                        }
+                        return Text(
+                          _isBasicInfo ? 'Next' : 'Create Product',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                             color: Colors.white,
-                            strokeWidth: 2,
                           ),
                         );
-                      }
-                      return Text(
-                        _isBasicInfo ? 'Next' : 'Create Product',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      );
-                    },
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -575,6 +589,7 @@ class _BasicInfoForm extends StatelessWidget {
   final TextEditingController categoryController;
   final TextEditingController discountController;
   final TextEditingController taxController;
+  final ThemeData theme;
 
   const _BasicInfoForm({
     required this.formKey,
@@ -584,6 +599,7 @@ class _BasicInfoForm extends StatelessWidget {
     required this.categoryController,
     required this.discountController,
     required this.taxController,
+    required this.theme,
   });
 
   @override
@@ -598,12 +614,14 @@ class _BasicInfoForm extends StatelessWidget {
             controller: nameController,
             validator: (value) =>
                 value?.isEmpty ?? true ? 'Please enter a name' : null,
+            theme: theme,
           ),
           CustomFormField(
             label: 'Description',
             placeholder: 'Enter product description',
             controller: descriptionController,
             maxLines: 3,
+            theme: theme,
           ),
           Row(
             children: [
@@ -613,6 +631,7 @@ class _BasicInfoForm extends StatelessWidget {
                   placeholder: 'Enter price',
                   controller: priceController,
                   isNumber: true,
+                  theme: theme,
                 ),
               ),
               const SizedBox(width: 16),
@@ -621,6 +640,7 @@ class _BasicInfoForm extends StatelessWidget {
                   label: 'Category',
                   placeholder: 'Select category',
                   controller: categoryController,
+                  theme: theme,
                 ),
               ),
             ],
@@ -633,6 +653,7 @@ class _BasicInfoForm extends StatelessWidget {
                   placeholder: '0',
                   controller: discountController,
                   isNumber: true,
+                  theme: theme,
                 ),
               ),
               const SizedBox(width: 16),
@@ -642,6 +663,7 @@ class _BasicInfoForm extends StatelessWidget {
                   placeholder: '0',
                   controller: taxController,
                   isNumber: true,
+                  theme: theme,
                 ),
               ),
             ],
@@ -658,6 +680,7 @@ class _InventoryForm extends StatelessWidget {
   final TextEditingController barcodeController;
   final TextEditingController stockController;
   final TextEditingController supplierController;
+  final ThemeData theme;
 
   const _InventoryForm({
     required this.formKey,
@@ -665,6 +688,7 @@ class _InventoryForm extends StatelessWidget {
     required this.barcodeController,
     required this.stockController,
     required this.supplierController,
+    required this.theme,
   });
 
   @override
@@ -680,6 +704,7 @@ class _InventoryForm extends StatelessWidget {
                   label: 'SKU',
                   placeholder: 'Enter SKU',
                   controller: skuController,
+                  theme: theme,
                 ),
               ),
               const SizedBox(width: 16),
@@ -688,6 +713,7 @@ class _InventoryForm extends StatelessWidget {
                   label: 'Barcode',
                   placeholder: 'Scan barcode',
                   controller: barcodeController,
+                  theme: theme,
                 ),
               ),
             ],
@@ -700,6 +726,7 @@ class _InventoryForm extends StatelessWidget {
                   placeholder: '0',
                   controller: stockController,
                   isNumber: true,
+                  theme: theme,
                 ),
               ),
               const SizedBox(width: 16),
@@ -708,6 +735,7 @@ class _InventoryForm extends StatelessWidget {
                   label: 'Supplier',
                   placeholder: 'Select supplier',
                   controller: supplierController,
+                  theme: theme,
                 ),
               ),
             ],

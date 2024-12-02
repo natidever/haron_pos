@@ -8,6 +8,7 @@ class CustomFormField extends StatelessWidget {
   final bool isNumber;
   final int maxLines;
   final String? Function(String?)? validator;
+  final ThemeData theme;
 
   const CustomFormField({
     super.key,
@@ -17,6 +18,7 @@ class CustomFormField extends StatelessWidget {
     this.isNumber = false,
     this.maxLines = 1,
     this.validator,
+    required this.theme,
   });
 
   @override
@@ -31,7 +33,7 @@ class CustomFormField extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.grey,
+              color: theme.colorScheme.onBackground.withOpacity(0.7),
             ),
           ),
           const SizedBox(height: 8),
@@ -39,27 +41,29 @@ class CustomFormField extends StatelessWidget {
             controller: controller,
             keyboardType: isNumber ? TextInputType.number : TextInputType.text,
             maxLines: maxLines,
-            style: GoogleFonts.poppins(),
+            style: GoogleFonts.poppins(
+              color: theme.colorScheme.onBackground,
+            ),
             decoration: InputDecoration(
               hintText: placeholder,
               hintStyle: GoogleFonts.poppins(
-                color: Colors.grey[400],
+                color: theme.colorScheme.onBackground.withOpacity(0.5),
                 fontSize: 14,
               ),
               filled: true,
-              fillColor: Colors.grey[50],
+              fillColor: theme.cardColor,
               contentPadding: const EdgeInsets.all(16),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
+                borderSide: BorderSide(color: theme.dividerColor),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
+                borderSide: BorderSide(color: theme.dividerColor),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Theme.of(context).primaryColor),
+                borderSide: BorderSide(color: theme.primaryColor),
               ),
             ),
             validator: validator,

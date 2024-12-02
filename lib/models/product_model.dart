@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import 'dart:io';
 
 part 'product_model.g.dart';
 
@@ -75,15 +76,18 @@ class Product {
   }
 
   String get displayImage {
-    // If image path starts with 'assets/', it's an asset image
+    // If it's an asset path, return as is
     if (image.startsWith('assets/')) {
       return image;
     }
-    // If image path starts with '/', it's a file system path
+    // If it's a file path and file exists, return the path
     if (image.startsWith('/')) {
-      return image;
+      final file = File(image);
+      if (file.existsSync()) {
+        return image;
+      }
     }
-    // Default to placeholder only if no valid path is found
+    // Return placeholder if no valid image found
     return 'assets/images/products/place_holder.jpg';
   }
 }
