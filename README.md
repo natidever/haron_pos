@@ -46,19 +46,16 @@ A modern Point of Sale (POS) system built with Flutter, featuring a clean UI, of
 
 
 ## 📱 Screenshots
+## 📱 Screenshots
 
+<p float="left">
+  <img src="assets/screenshots/home.jpg"  alt=" home"  width="200" />
+  <img src="assets/screenshots/addProductjpg.jpg" alt="add product " width="200" /> 
+  <img src="assets/screenshots/checkout.jpg" alt="checkout " width="200" />
+  <img src="assets/screenshots/chapa.jpg" alt="checkout " width="200" />
+  <img src="assets/screenshots/success.jpg" alt="success" width="200" />
+</p
 
-
-## 🏗️ Project Structure
-lib/
-├── bloc/ # Bloc state management
-├── models/ # Data models
-├── pages/ # UI screens
-├── widgets/ # Reusable widgets
-├── constants/ # App constants
-├── theme/ # Theme configuration
-├── utils/ # Utility functions
-└── main.dart # App entry point
 
 
 
@@ -80,14 +77,6 @@ Hive DB is used for local storage with the following boxes:
 - **settings**: App configuration
 - **userBox**: User data
 
-## 🛣️ Roadmap
-
-- [ ] Barcode scanner integration
-- [ ] Cloud backup/sync
-- [ ] Multiple user roles
-- [ ] Inventory alerts
-- [ ] Customer management
-- [ ] Supplier management
 
 ## 🤝 Contributing
 
