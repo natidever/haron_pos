@@ -1,16 +1,29 @@
-# haron_pos
+# Haron POS
 
-A new Flutter project.
+Welcome to **Haron POS**, a comprehensive Point of Sale (POS) system built with Flutter for seamless retail management. This application leverages **Flutter Bloc** for state management, **Hydrated Bloc** for persistent state, and **Hive DB** for lightweight local data storage. 
+
+## Features
+- 📦 Efficient inventory management.
+- 📊 Sales tracking and reporting.
+- 📡 Seamless offline support with data persistence.
+- 💻 User-friendly and responsive UI.
+
+---
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+Follow these steps to set up and run the project on your local machine.
 
-A few resources to get you started if this is your first Flutter project:
+### Prerequisites
+Ensure the following are installed:
+- [Flutter SDK](https://docs.flutter.dev/get-started/install) (latest stable version)
+- A code editor like [Visual Studio Code](https://code.visualstudio.com/) or [Android Studio](https://developer.android.com/studio)
+- [Git](https://git-scm.com/) for version control
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Installation
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. **Clone the repository**  
+   Open your terminal and run:  
+   ```bash
+   git clone https://github.com/natidever/haron_pos.git
+   cd haron_pos
