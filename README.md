@@ -45,10 +45,12 @@ A modern Point of Sale (POS) system built with Flutter, featuring a clean UI, of
 4. Run the app
 
 
-## 📱 Screenshots
+
 ## 📱 Screenshots
 
 <p float="left">
+  
+  <img src="assets/screenshots/login.png"  alt=" login"  width="200" />
   <img src="assets/screenshots/home.jpg"  alt=" home"  width="200" />
   <img src="assets/screenshots/addProductjpg.jpg" alt="add product " width="200" /> 
   <img src="assets/screenshots/checkout.jpg" alt="checkout " width="200" />
@@ -56,6 +58,9 @@ A modern Point of Sale (POS) system built with Flutter, featuring a clean UI, of
   <img src="assets/screenshots/success.jpg" alt="success" width="200" />
 </p
 
+## 🔐 Default Email and Passowrd 
+  - **Email**: admin@gmail.com
+  - **Password** :admin123
 
 
 
